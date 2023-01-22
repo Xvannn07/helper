@@ -43,7 +43,8 @@ app.get('/', (req, res) => {
 				buffer: `${baseUrl}/buffer?url=https://i.waifu.pics/dQ8bv0m.png`,
 				fetch: `${baseUrl}/fetch?url=${baseUrl}`,
 				igstalk: `${baseUrl}/igstalk?user=otaku_anime_indonesia`,
-				ssweb: `${baseUrl}/ss?url=${baseUrl}&full=false&type=desktop`
+				ssweb: `${baseUrl}/ss?url=${baseUrl}&full=false&type=desktop`,
+                                jadianime: `${baseUrl}/jadianime?url=https://telegra.ph/file/70c5a99ba1e7cfc8905e8.jpg`
 			},
 			tiktok: {
 				latest_video: `${baseUrl}/tiktok/latest_video`,
@@ -100,6 +101,18 @@ app.get(['/ss', '/ssweb'], async (req, res) => {
 		if (!url) return res.json({ message: 'Required an url' })
 		let data = await ssweb(url, full, type)
 		res.end(data)
+	} catch (e) {
+		res.send(e)
+	}
+})
+
+app.get(['/jadianime'], async (req, res) => {
+	try {
+		let { url } = req.query
+		if (!url) return res.json({ message: 'Required an url' })
+		let data = await jadianime(url)
+                let buffer = await getBuffer(data.img_urls[0])
+		res.send(buffer)
 	} catch (e) {
 		res.send(e)
 	}
@@ -352,5 +365,86 @@ async function doujindesuScraper(type = 'latest', query) {
 		return obj
 	} else {
 		throw 'Type not supported'
+	}
+}
+
+async function jadianime(urls) {  
+const imgBuffer = await getBuffer(urls)
+const obj = {
+        busiId: 'different_dimension_me_img_entry',
+        extra: JSON.stringify({
+            face_rects: [],
+            version: 2,
+            platform: 'web',
+            data_report: {
+                parent_trace_id: v4(),
+                root_channel: '',
+                level: 0,
+            },
+        }),
+        images: [imgBuffer.toString('base64')],
+};
+const str = JSON.stringify(obj);
+const sign = md5(
+            'https://h5.tu.qq.com' +
+            (str.length + (encodeURIComponent(str).match(/%[89ABab]/g)?.length || 0)) +
+            'HQ31X02e',
+);
+const response = await axios.request({
+                    httpsAgent,
+                    method: 'POST',
+                    url: 'https://ai.tu.qq.com/trpc.shadow_cv.ai_processor_cgi.AIProcessorCgi/Process',
+                    data: obj,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': 'https://h5.tu.qq.com',
+                        'Referer': 'https://h5.tu.qq.com/',
+                        'User-Agent':
+                            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
+                        'x-sign-value': sign,
+                        'x-sign-version': 'v1',
+                    },
+                    timeout: 30000,
+   });
+   if (!response.data) {
+            throw 'No data'
+        }
+        if (response.data.msg === 'VOLUMN_LIMIT') {
+            throw 'QQ rate limit caught'
+        }
+        if (response.data.msg === 'IMG_ILLEGAL') {
+            throw 'Couldn\'t pass the censorship. Try another photo.'
+        }
+        if (response.data.code === 1001) {
+            throw 'Face not found. Try another photo.'
+        }
+        if (response.data.code === -2100) { // request image is invalid
+            throw 'Try another photo.'
+        }
+        if (response.data.code === 2119 || /* user_ip_country | service upgrading */ response.data.code === -2111 /* AUTH_FAILED */) {
+            throw `Blocked ${JSON.stringify(response.data)}`
+        }
+        if (!response.data.extra) {
+            throw 'Got no data from QQ: ' + JSON.stringify(response.data)
+}
+return JSON.parse(response.data.extra)
+}
+
+async function getBuffer(url, options) {
+	try {
+		options ? options : {}
+		const res = await axios({
+			method: "get",
+			url,
+			headers: {
+				DNT: 1,
+				"Upgrade-Insecure-Request": 1,
+			},
+			...options,
+			responseType: "arraybuffer",
+		});
+		return res.data
+	} catch (e) {
+		throw new Error(e)
 	}
 }
