@@ -9,7 +9,7 @@ const express = require('express')
 const PDFDocument = require('pdfkit')
 const getStream = require('get-stream')
 const md5 = require('md5')
-const { v4 } = require('uuid')
+const { v4uud } = require('uuid')
 
 const urlebird = require('./lib/urlebird.js')
 const tmpFolder = os.tmpdir() // path.join(__dirname, './tmp')
@@ -371,7 +371,12 @@ async function doujindesuScraper(type = 'latest', query) {
 }
 
 async function jadianime(urls) {  
-const imgBuffer = await getBuffer(urls)
+const data = await axios.get(urls, { responseType: 'arraybuffer' })
+		res.set({
+			'Content-Type': data.headers['content-type'] || data.headers['Content-Type'],
+			'Content-Length': data.data.length
+})
+const imgBuffer = data.data
 const obj = {
         busiId: 'different_dimension_me_img_entry',
         extra: JSON.stringify({
@@ -379,7 +384,7 @@ const obj = {
             version: 2,
             platform: 'web',
             data_report: {
-                parent_trace_id: v4(),
+                parent_trace_id: v4uud(),
                 root_channel: '',
                 level: 0,
             },
@@ -392,8 +397,7 @@ const sign = md5(
             (str.length + (encodeURIComponent(str).match(/%[89ABab]/g)?.length || 0)) +
             'HQ31X02e',
 );
-const response = await axios.request({
-                    httpsAgent,
+const response = await axios.request({                    
                     method: 'POST',
                     url: 'https://ai.tu.qq.com/trpc.shadow_cv.ai_processor_cgi.AIProcessorCgi/Process',
                     data: obj,
