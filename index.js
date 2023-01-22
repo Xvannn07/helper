@@ -8,6 +8,8 @@ const cheerio = require('cheerio')
 const express = require('express')
 const PDFDocument = require('pdfkit')
 const getStream = require('get-stream')
+const md5 = require('md5')
+const { v4 } = require('uuid')
 
 const urlebird = require('./lib/urlebird.js')
 const tmpFolder = os.tmpdir() // path.join(__dirname, './tmp')
