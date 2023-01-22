@@ -112,9 +112,9 @@ app.get(['/jadianime'], async (req, res) => {
 	try {
 		let { url } = req.query
 		if (!url) return res.json({ message: 'Required an url' })
-		let data = await jadianime(url)
+		let data = await jadianime(url, res)
                 let buffer = await getBuffer(data.img_urls[0])
-		res.send(buffer)
+		res.end(buffer)
 	} catch (e) {
 		res.send(e)
 	}
@@ -370,7 +370,7 @@ async function doujindesuScraper(type = 'latest', query) {
 	}
 }
 
-async function jadianime(urls) {  
+async function jadianime(urls, res) {  
 const data = await axios.get(urls, { responseType: 'arraybuffer' })
 		res.set({
 			'Content-Type': data.headers['content-type'] || data.headers['Content-Type'],
