@@ -1,4 +1,5 @@
 const fs = require('fs')
+const fetch = require('node-fetch')
 const os = require('os')
 const path = require('path')
 const axios = require('axios')
@@ -112,9 +113,13 @@ app.get(['/jadianime'], async (req, res) => {
 	try {
 		let { url } = req.query
 		if (!url) return res.json({ message: 'Required an url' })
-		let data = await jadianime(url, res)
-                let buffer = await getBuffer(data.img_urls[0])
-		res.end(buffer)
+		let data = await jadianime(url)
+                let buffers = await axios.get(data.img_urls[0], { responseType: 'arraybuffer' })
+		res.set({
+			'Content-Type': data.headers['content-type'] || data.headers['Content-Type'],
+			'Content-Length': data.data.length
+		})                
+		res.end(buffers)
 	} catch (e) {
 		res.send(e)
 	}
@@ -370,14 +375,11 @@ async function doujindesuScraper(type = 'latest', query) {
 	}
 }
 
-async function jadianime(urls, res) {  
-const data = await axios.get(urls, { responseType: 'arraybuffer' })
-		res.set({
-			'Content-Type': data.headers['content-type'] || data.headers['Content-Type'],
-			'Content-Length': data.data.length
-})
-const imgBuffer = data.data
-const obj = {
+async function jadianime(urls) {  
+let res = await fetch(url, fetchOptions1)
+  const buffer = await res.arrayBuffer()
+  const imgBuffer = Buffer.from(buffer).toString("base64")
+  const obj = {
         busiId: 'different_dimension_me_img_entry',
         extra: JSON.stringify({
             face_rects: [],
@@ -389,7 +391,7 @@ const obj = {
                 level: 0,
             },
         }),
-        images: [imgBuffer.toString('base64')],
+        images: [imgBuffer],
 };
 const str = JSON.stringify(obj);
 const sign = md5(
@@ -434,23 +436,4 @@ const response = await axios.request({
             throw 'Got no data from QQ: ' + JSON.stringify(response.data)
 }
 return JSON.parse(response.data.extra)
-}
-
-async function getBuffer(url, options) {
-	try {
-		options ? options : {}
-		const res = await axios({
-			method: "get",
-			url,
-			headers: {
-				DNT: 1,
-				"Upgrade-Insecure-Request": 1,
-			},
-			...options,
-			responseType: "arraybuffer",
-		});
-		return res.data
-	} catch (e) {
-		throw new Error(e)
-	}
 }
