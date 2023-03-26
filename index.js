@@ -376,7 +376,7 @@ async function doujindesuScraper(type = 'latest', query) {
 }
 
 async function jadianime(urls) {  
-let res = await fetch(url, fetchOptions1)
+let res = await fetch(urls)
   const buffer = await res.arrayBuffer()
   const imgBuffer = Buffer.from(buffer).toString("base64")
   const obj = {
