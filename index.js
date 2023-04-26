@@ -372,7 +372,7 @@ async function doujindesuScraper(type = 'latest', query) {
 }
 
 async function jadianime(urls) { 
-  const imgBuffer = (await axios.get(urls, { responseType: 'arraybuffer' }).data.toString("base64")
+  const imgBuffer = (await axios.get(urls, { responseType: 'arraybuffer' })).data.toString("base64")
   const obj = {
         busiId: 'different_dimension_me_img_entry',
         extra: JSON.stringify({
