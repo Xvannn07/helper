@@ -114,11 +114,7 @@ app.get(['/jadianime'], async (req, res) => {
 		let { url } = req.query
 		if (!url) return res.json({ message: 'Required an url' })
 		let data = await jadianime(url)
-                let buffers = await axios.get(data.img_urls[0], { responseType: 'arraybuffer' })
-		res.set({
-			'Content-Type': data.headers['content-type'] || data.headers['Content-Type'],
-			'Content-Length': data.data.length
-		})                
+                let buffers = await axios.get(data.img_urls[0], { responseType: 'arraybuffer' })		                
 		res.end(buffers)
 	} catch (e) {
 		res.send(e)
