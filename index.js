@@ -10,7 +10,10 @@ const express = require('express')
 const PDFDocument = require('pdfkit')
 const getStream = require('get-stream')
 const md5 = require('md5')
+const tf = require("@transflow/tfjs-node");
+const Upcsaler = require("upscaler/node")
 const { v4uud } = require('uuid')
+
 
 const urlebird = require('./lib/urlebird.js')
 const tmpFolder = os.tmpdir() // path.join(__dirname, './tmp')
@@ -118,6 +121,12 @@ app.get(['/jadianime'], async (req, res) => {
 		res.end(buffers)
 	} catch (e) {
 		res.send(e)
+	}
+})
+
+app.get(['/upscaler'], async (req, res) {
+	try {
+		
 	}
 })
 
